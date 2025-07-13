@@ -168,6 +168,10 @@ EOF
         }
     }
 
+    /**
+     * @param array<string> $paths
+     * @param array<string> $excludePaths
+     */
     private function indexFiles(SymbolIndex $index, array $paths, array $excludePaths, SymfonyStyle $io): int
     {
         $totalFiles = 0;
@@ -191,6 +195,9 @@ EOF
         return $totalFiles;
     }
     
+    /**
+     * @param array<string> $excludePaths
+     */
     private function indexDirectory(SymbolIndex $index, string $directory, array $excludePaths): int
     {
         $count = 0;
@@ -211,6 +218,9 @@ EOF
         return $count;
     }
     
+    /**
+     * @param array<string> $excludePaths
+     */
     private function shouldIncludeFile(string $filePath, array $excludePaths): bool
     {
         $realPath = realpath($filePath);
@@ -225,6 +235,10 @@ EOF
         return true;
     }
     
+    /**
+     * @param array<array{file: string, line: int, code: string, confidence: string, context: array{start: int, lines: array<string>}}> $usages
+     * @return array<array{file: string, line: int, code: string, confidence: string, context: array{start: int, lines: array<string>}}>
+     */
     private function filterByConfidence(array $usages, string $minConfidence): array
     {
         $confidenceOrder = ['DYNAMIC' => 0, 'POSSIBLE' => 1, 'PROBABLE' => 2, 'CERTAIN' => 3];
@@ -236,6 +250,9 @@ EOF
         });
     }
     
+    /**
+     * @param array<array{file: string, line: int, code: string, confidence: string, context: array{start: int, lines: array<string>}}> $usages
+     */
     private function formatOutput(array $usages, string $format): string
     {
         switch ($format) {
@@ -251,6 +268,9 @@ EOF
         }
     }
     
+    /**
+     * @param array<array{file: string, line: int, code: string, confidence: string, context: array{start: int, lines: array<string>}}> $usages
+     */
     private function formatAsTable(array $usages): string
     {
         if (empty($usages)) {
@@ -275,6 +295,9 @@ EOF
         return $output;
     }
     
+    /**
+     * @param array<array{file: string, line: int, code: string, confidence: string, context: array{start: int, lines: array<string>}}> $usages
+     */
     private function formatForClaude(array $usages): string
     {
         if (empty($usages)) {
