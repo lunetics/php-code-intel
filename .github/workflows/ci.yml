@@ -116,7 +116,7 @@ jobs:
     - name: Run PHPStan analysis
       run: |
         composer require --dev phpstan/phpstan --no-interaction
-        vendor/bin/phpstan analyse src tests --level=max --no-progress
+        vendor/bin/phpstan analyse --no-progress
     
     - name: Security audit
       run: composer audit
