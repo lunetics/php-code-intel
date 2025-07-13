@@ -121,6 +121,9 @@ EOF
         }
     }
     
+    /**
+     * @param array<array{file: string, error: string}> $errors
+     */
     private function indexFileWithStats(SymbolIndex $index, string $filePath, int &$totalFiles, int &$totalSymbols, array &$errors): void
     {
         try {
@@ -135,6 +138,10 @@ EOF
         }
     }
     
+    /**
+     * @param array<string> $excludePaths
+     * @param array<array{file: string, error: string}> $errors
+     */
     private function indexDirectoryWithStats(SymbolIndex $index, string $directory, array $excludePaths, int &$totalFiles, int &$totalSymbols, array &$errors): void
     {
         $iterator = new \RecursiveIteratorIterator(
@@ -151,6 +158,9 @@ EOF
         }
     }
     
+    /**
+     * @param array<string> $excludePaths
+     */
     private function shouldIncludeFile(string $filePath, array $excludePaths): bool
     {
         $realPath = realpath($filePath);
@@ -170,6 +180,9 @@ EOF
         return true;
     }
     
+    /**
+     * @param array<array{file: string, error: string}> $errors
+     */
     private function displayStats(SymfonyStyle $io, int $totalFiles, int $totalSymbols, array $errors): void
     {
         $io->section('Indexing Statistics');

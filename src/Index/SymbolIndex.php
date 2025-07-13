@@ -13,8 +13,13 @@ use PhpParser\NodeTraverser;
  */
 class SymbolIndex
 {
+    /**
+     * @var array<string, array{classes: array<mixed>, methods: array<mixed>, functions: array<mixed>, constants: array<mixed>}>
+     */
     private array $symbols = [];
-    private array $fileHashes = [];
+    /**
+     * @var array<string>
+     */
     private array $indexedFiles = [];
     
     public function indexFile(string $filePath): void
@@ -23,7 +28,6 @@ class SymbolIndex
             return;
         }
         
-        $this->fileHashes[$filePath] = md5_file($filePath);
         $this->indexedFiles[] = $filePath;
         
         // Basic indexing - just store that we've processed the file
@@ -36,16 +40,25 @@ class SymbolIndex
         ];
     }
     
+    /**
+     * @return array<string, array{classes: array<mixed>, methods: array<mixed>, functions: array<mixed>, constants: array<mixed>}>
+     */
     public function getSymbols(): array
     {
         return $this->symbols;
     }
     
+    /**
+     * @return array{classes: array<mixed>, methods: array<mixed>, functions: array<mixed>, constants: array<mixed>}|null
+     */
     public function findSymbol(string $fullyQualifiedName): ?array
     {
         return $this->symbols[$fullyQualifiedName] ?? null;
     }
     
+    /**
+     * @return array<string>
+     */
     public function getIndexedFiles(): array
     {
         return $this->indexedFiles;
@@ -66,7 +79,6 @@ class SymbolIndex
     public function clear(): void
     {
         $this->symbols = [];
-        $this->fileHashes = [];
         $this->indexedFiles = [];
     }
 }

@@ -29,6 +29,9 @@ class ConfidenceScoringTest extends TestCase
         $this->assertEquals('CERTAIN', $confidence);
     }
 
+    /**
+     * @return array<string, array<string>>
+     */
     public function certainConfidenceProvider(): array
     {
         return [
@@ -56,6 +59,9 @@ class ConfidenceScoringTest extends TestCase
         $this->assertEquals('PROBABLE', $confidence);
     }
 
+    /**
+     * @return array<string, array<string>>
+     */
     public function probableConfidenceProvider(): array
     {
         return [
@@ -91,6 +97,9 @@ class ConfidenceScoringTest extends TestCase
         $this->assertEquals('POSSIBLE', $confidence);
     }
 
+    /**
+     * @return array<string, array<string>>
+     */
     public function possibleConfidenceProvider(): array
     {
         return [
@@ -116,6 +125,9 @@ class ConfidenceScoringTest extends TestCase
         $this->assertEquals('DYNAMIC', $confidence);
     }
 
+    /**
+     * @return array<string, array<string>>
+     */
     public function dynamicConfidenceProvider(): array
     {
         return [

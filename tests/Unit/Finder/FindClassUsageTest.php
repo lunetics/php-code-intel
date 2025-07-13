@@ -135,7 +135,6 @@ class FindClassUsageTest extends TestCase
         $usages = $this->finder->find('NonExistentClass');
         
         // Assert
-        $this->assertIsArray($usages);
         $this->assertEmpty($usages);
     }
 
