@@ -1,6 +1,6 @@
 # PHP Code Intelligence Tool - Multi-Version Testing
 
-.PHONY: help test test-all test-80 test-81 test-82 test-83 benchmark clean phpstan code-quality
+.PHONY: help test test-all test-82 test-83 test-84 benchmark clean phpstan code-quality
 
 # Colors
 BLUE := \033[36m
@@ -27,49 +27,42 @@ define test_version
 	@docker run --rm -v $(PWD):/app -w /app php:$(1)-cli sh -c "php vendor/bin/phpunit && php bin/php-code-intel --version && php bin/php-code-intel find-usages \"TestFixtures\\\\BasicSymbols\\\\SimpleClass\" --path=tests/fixtures/BasicSymbols/ --format=json | head -5"
 endef
 
-test-80: ## Test with PHP 8.0
-	$(call test_version,8.0)
-
-test-81: ## Test with PHP 8.1  
-	$(call test_version,8.1)
-
 test-82: ## Test with PHP 8.2
 	$(call test_version,8.2)
 
 test-83: ## Test with PHP 8.3
 	$(call test_version,8.3)
 
-test-all: ## Test all PHP versions (8.0, 8.1, 8.2, 8.3)
-	@echo "$(BLUE)Testing all PHP versions...$(NC)"
-	@echo ""
-	@$(MAKE) test-80 || echo "$(RED)❌ PHP 8.0 failed$(NC)"
-	@echo ""
-	@$(MAKE) test-81 || echo "$(RED)❌ PHP 8.1 failed$(NC)" 
+test-84: ## Test with PHP 8.4
+	$(call test_version,8.4)
+
+test-all: ## Test all supported PHP versions (8.2, 8.3, 8.4)
+	@echo "$(BLUE)Testing all supported PHP versions...$(NC)"
 	@echo ""
 	@$(MAKE) test-82 || echo "$(RED)❌ PHP 8.2 failed$(NC)"
 	@echo ""
 	@$(MAKE) test-83 || echo "$(RED)❌ PHP 8.3 failed$(NC)"
 	@echo ""
+	@$(MAKE) test-84 || echo "$(RED)❌ PHP 8.4 failed$(NC)"
+	@echo ""
 	@echo "$(GREEN)✅ Multi-version testing complete!$(NC)"
 
-benchmark: ## Benchmark performance across PHP versions
+benchmark: ## Benchmark performance across supported PHP versions
 	@echo "$(BLUE)Performance Benchmark$(NC)"
 	@echo "===================="
-	@echo "$(YELLOW)PHP 8.0:$(NC)"
-	@docker run --rm -v $(PWD):/app -w /app php:8.0-cli-alpine sh -c "composer install --no-interaction && time php bin/php-code-intel index tests/fixtures/ >/dev/null"
-	@echo "$(YELLOW)PHP 8.1:$(NC)"  
-	@docker run --rm -v $(PWD):/app -w /app php:8.1-cli-alpine sh -c "composer install --no-interaction && time php bin/php-code-intel index tests/fixtures/ >/dev/null"
 	@echo "$(YELLOW)PHP 8.2:$(NC)"
 	@docker run --rm -v $(PWD):/app -w /app php:8.2-cli-alpine sh -c "composer install --no-interaction && time php bin/php-code-intel index tests/fixtures/ >/dev/null"
 	@echo "$(YELLOW)PHP 8.3:$(NC)"
 	@docker run --rm -v $(PWD):/app -w /app php:8.3-cli-alpine sh -c "composer install --no-interaction && time php bin/php-code-intel index tests/fixtures/ >/dev/null"
+	@echo "$(YELLOW)PHP 8.4:$(NC)"
+	@docker run --rm -v $(PWD):/app -w /app php:8.4-cli-alpine sh -c "composer install --no-interaction && time php bin/php-code-intel index tests/fixtures/ >/dev/null"
 
 matrix: ## Show compatibility matrix
 	@echo "$(BLUE)PHP Compatibility Matrix$(NC)"
 	@echo "========================="
 	@echo "| Version | Tests | CLI   | Symbol Finding |"
 	@echo "|---------|-------|-------|----------------|"
-	@for version in 8.0 8.1 8.2 8.3; do \
+	@for version in 8.2 8.3 8.4; do \
 		echo -n "| $$version     |"; \
 		if docker run --rm -v $(PWD):/app -w /app php:$$version-cli-alpine sh -c "composer install --no-interaction >/dev/null 2>&1 && php vendor/bin/phpunit >/dev/null 2>&1"; then \
 			echo -n " $(GREEN)✅$(NC)    |"; \
@@ -88,7 +81,7 @@ matrix: ## Show compatibility matrix
 		fi; \
 	done
 
-quick: test-83 ## Quick test with latest PHP only
+quick: test-84 ## Quick test with latest PHP only
 
 clean: ## Clean up
 	@echo "$(YELLOW)Cleaning up...$(NC)"
