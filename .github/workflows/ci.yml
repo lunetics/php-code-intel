@@ -1,0 +1,153 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version:
+          - "8.0"
+          - "8.1" 
+          - "8.2"
+          - "8.3"
+        dependencies:
+          - "highest"
+          - "lowest"
+    
+    name: PHP ${{ matrix.php-version }} (${{ matrix.dependencies }})
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        extensions: json, mbstring, tokenizer, zip, opcache
+        coverage: xdebug
+        tools: composer:v2
+    
+    - name: Get composer cache directory
+      id: composer-cache
+      run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+    
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ matrix.dependencies }}-${{ hashFiles('**/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-${{ matrix.dependencies }}-
+    
+    - name: Install dependencies (highest)
+      if: matrix.dependencies == 'highest'
+      run: composer install --prefer-dist --no-interaction --no-progress
+    
+    - name: Install dependencies (lowest)
+      if: matrix.dependencies == 'lowest'
+      run: composer update --prefer-lowest --prefer-dist --no-interaction --no-progress
+    
+    - name: Validate composer.json and composer.lock
+      run: composer validate --strict
+    
+    - name: Check PHP syntax
+      run: find src tests -name "*.php" -exec php -l {} \;
+    
+    - name: Run PHPUnit tests
+      run: vendor/bin/phpunit --coverage-clover coverage.xml
+    
+    - name: Test CLI tool
+      run: |
+        php bin/php-code-intel --version
+        php bin/php-code-intel version -v
+    
+    - name: Test symbol finding
+      run: |
+        php bin/php-code-intel find-usages "TestFixtures\\BasicSymbols\\SimpleClass" --path=tests/fixtures/BasicSymbols/ --format=json
+        php bin/php-code-intel find-usages "TestFixtures\\BasicSymbols\\SimpleClass" --path=tests/fixtures/BasicSymbols/ --format=table
+        php bin/php-code-intel find-usages "TestFixtures\\BasicSymbols\\SimpleClass" --path=tests/fixtures/BasicSymbols/ --format=claude
+    
+    - name: Test indexing
+      run: |
+        php bin/php-code-intel index tests/fixtures/BasicSymbols/ --stats
+    
+    - name: Test PHAR build (PHP 8.1+)
+      if: matrix.php-version != '8.0'
+      run: |
+        php -d phar.readonly=0 build/build-phar.php
+        ./build/php-code-intel.phar --version
+        ./build/php-code-intel.phar find-usages "TestFixtures\\BasicSymbols\\SimpleClass" --path=tests/fixtures/BasicSymbols/ --format=json
+    
+    - name: Upload coverage to Codecov
+      if: matrix.php-version == '8.3' && matrix.dependencies == 'highest'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  compatibility-check:
+    runs-on: ubuntu-latest
+    
+    name: Compatibility Check
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup PHP 8.3
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: "8.3"
+        extensions: json, mbstring, tokenizer
+        tools: composer:v2
+    
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-interaction
+    
+    - name: Check platform requirements
+      run: composer check-platform-reqs
+    
+    - name: Run PHPStan analysis
+      run: |
+        composer require --dev phpstan/phpstan --no-interaction
+        vendor/bin/phpstan analyse src tests --level=max --no-progress
+    
+    - name: Security audit
+      run: composer audit
+
+  performance-test:
+    runs-on: ubuntu-latest
+    
+    name: Performance Benchmarks
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup PHP 8.3
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: "8.3"
+        extensions: json, mbstring, tokenizer
+        tools: composer:v2
+    
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-interaction --optimize-autoloader
+    
+    - name: Performance benchmark
+      run: |
+        echo "Running performance benchmarks..."
+        time php bin/php-code-intel index tests/fixtures/ --stats
+        time php bin/php-code-intel find-usages "TestFixtures\\BasicSymbols\\SimpleClass" --path=tests/fixtures/
+    
+    - name: Memory usage test
+      run: |
+        echo "Testing memory usage..."
+        php -d memory_limit=128M bin/php-code-intel find-usages "TestFixtures\\BasicSymbols\\SimpleClass" --path=tests/fixtures/

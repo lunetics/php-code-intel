@@ -51,6 +51,18 @@ class SymbolIndex
         return $this->indexedFiles;
     }
     
+    public function getSymbolCount(): int
+    {
+        $count = 0;
+        foreach ($this->symbols as $fileSymbols) {
+            $count += count($fileSymbols['classes'] ?? []);
+            $count += count($fileSymbols['methods'] ?? []);
+            $count += count($fileSymbols['functions'] ?? []);
+            $count += count($fileSymbols['constants'] ?? []);
+        }
+        return $count;
+    }
+    
     public function clear(): void
     {
         $this->symbols = [];

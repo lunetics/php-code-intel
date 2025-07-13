@@ -6,6 +6,12 @@ namespace CodeIntel\Finder;
 
 /**
  * Calculates confidence levels for symbol usage
+ * 
+ * Confidence Levels:
+ * - CERTAIN: Direct, unambiguous usage (new Class(), Class::method())
+ * - PROBABLE: Type-hinted or contextual usage (?->, method chaining)
+ * - POSSIBLE: Dynamic but traceable (new $class, $obj->$method)
+ * - DYNAMIC: Highly dynamic or magic usage (call_user_func, __call)
  */
 class ConfidenceScorer
 {
@@ -21,11 +27,33 @@ class ConfidenceScorer
     {
         $code = trim($code);
         
+        // DYNAMIC - Magic methods and highly dynamic invocation (check first)
+        if (str_contains($code, 'call_user_func') || 
+            preg_match('/(?<!new\s)(?<!->)\$[a-zA-Z_]\w*\s*\(/', $code) ||  // $obj() invoke pattern (not new $var() or $obj->$method())
+            preg_match('/\$\{[^}]+\}/', $code) ||                           // complex variable references like ${$varName}
+            str_contains($code, '__call') ||
+            str_contains($code, '->invoke')) {
+            return self::DYNAMIC;
+        }
+        
+        // POSSIBLE - Variable-based method chaining (check before CERTAIN)
+        if (preg_match('/\$(?!this)\w+->\w+\(\)->\w+\(\)/', $code)) { // variable method chaining (not $this)
+            return self::POSSIBLE;
+        }
+        
+        // PROBABLE - Nullsafe operator and method chaining patterns (check before CERTAIN)
+        if (str_contains($code, '?->') ||
+            preg_match('/\$this->\w+\(\)->\w+\(\)/', $code) ||      // $this method chaining like $this->getService()->process()
+            preg_match('/app\([^)]*\)->\w+\(\)/', $code)) {         // Laravel app() helper chaining like app()->method()
+            return self::PROBABLE;
+        }
+        
         // CERTAIN - Direct, unambiguous usage
         if (preg_match('/new\s+[A-Z]\w*\s*\(/', $code) ||           // new ClassName()
             preg_match('/[A-Z]\w*::[a-zA-Z_]\w*\s*\(/', $code) ||   // ClassName::method()
             preg_match('/[A-Z]\w*::[A-Z_][A-Z0-9_]*/', $code) ||    // ClassName::CONSTANT
             preg_match('/function\s+\w+\s*\([^)]*[A-Z]\w+\s+\$/', $code) || // function(Type $param)
+            preg_match('/\$\w+->\w+\s*\(/', $code) ||               // $obj->method()
             str_contains($code, 'instanceof') ||
             str_contains($code, '::class') ||
             str_contains($code, 'self::') ||
@@ -34,15 +62,7 @@ class ConfidenceScorer
             return self::CERTAIN;
         }
         
-        // DYNAMIC - Magic methods and highly dynamic invocation
-        if (str_contains($code, 'call_user_func') || 
-            str_contains($code, '__call') ||
-            str_contains($code, '->invoke') ||
-            preg_match('/\$[a-zA-Z_]\w*\s*\(/', $code)) {          // $obj() invoke pattern
-            return self::DYNAMIC;
-        }
-        
-        // POSSIBLE - Dynamic but traceable
+        // POSSIBLE - Dynamic but traceable  
         if (preg_match('/new\s+\$\w+/', $code) ||                   // new $className
             preg_match('/\$\w+->\$\w+\s*\(/', $code) ||            // $obj->$method()
             preg_match('/\$\w+\s*=\s*["\'][^"\']+["\']/', $code) || // $class = "ClassName"

@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  php80:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.multi-php
+      args:
+        PHP_VERSION: "8.0"
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: tail -f /dev/null
+    environment:
+      - PHP_MEMORY_LIMIT=512M
+      - PHP_VERSION=8.0
+
+  php81:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.multi-php
+      args:
+        PHP_VERSION: "8.1"
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: tail -f /dev/null
+    environment:
+      - PHP_MEMORY_LIMIT=512M
+      - PHP_VERSION=8.1
+
+  php82:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.multi-php
+      args:
+        PHP_VERSION: "8.2"
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: tail -f /dev/null
+    environment:
+      - PHP_MEMORY_LIMIT=512M
+      - PHP_VERSION=8.2
+
+  php83:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.multi-php
+      args:
+        PHP_VERSION: "8.3"
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: tail -f /dev/null
+    environment:
+      - PHP_MEMORY_LIMIT=512M
+      - PHP_VERSION=8.3

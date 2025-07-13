@@ -250,3 +250,19 @@ class Penguin extends Bird
         return 'waddling and swimming';
     }
 }
+
+// Usage examples for testing method calls
+$dog = new Dog('Labrador', 3);
+$result = $dog->makeSound(); // Regular method call
+
+// Parent method call example - calls Animal::makeSound through inheritance
+class ExtendedDog extends Dog 
+{
+    public function makeSound(): string
+    {
+        return parent::makeSound() . ' Extended!';
+    }
+}
+
+$extendedDog = new ExtendedDog('Golden Retriever', 2);
+$extendedSound = $extendedDog->makeSound();

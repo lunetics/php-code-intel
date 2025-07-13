@@ -1,0 +1,81 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * PHP Code Intelligence Tool
+ * 
+ * Command-line interface for finding PHP symbol usages
+ * Optimized for integration with Claude Code for accurate refactoring
+ */
+
+// Check PHP version
+if (version_compare(PHP_VERSION, '8.0.0', '<')) {
+    fwrite(STDERR, "PHP Code Intelligence Tool requires PHP 8.0 or higher. Current version: " . PHP_VERSION . "\n");
+    exit(1);
+}
+
+// Find autoloader
+$autoloadFiles = [
+    __DIR__ . '/../vendor/autoload.php',
+    __DIR__ . '/../../../autoload.php',
+    __DIR__ . '/../../autoload.php',
+    __DIR__ . '/../autoload.php'
+];
+
+$autoloaderFound = false;
+foreach ($autoloadFiles as $autoloadFile) {
+    if (file_exists($autoloadFile)) {
+        require_once $autoloadFile;
+        $autoloaderFound = true;
+        break;
+    }
+}
+
+if (!$autoloaderFound) {
+    fwrite(STDERR, "Autoloader not found. Please run 'composer install' first.\n");
+    exit(1);
+}
+
+// Check required extensions
+$requiredExtensions = ['json', 'mbstring', 'tokenizer'];
+$missingExtensions = [];
+
+foreach ($requiredExtensions as $extension) {
+    if (!extension_loaded($extension)) {
+        $missingExtensions[] = $extension;
+    }
+}
+
+if (!empty($missingExtensions)) {
+    fwrite(STDERR, "Missing required PHP extensions: " . implode(', ', $missingExtensions) . "\n");
+    exit(1);
+}
+
+// Set error handling
+error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
+// Increase memory limit if needed
+$memoryLimit = ini_get('memory_limit');
+if ($memoryLimit !== '-1' && (int)$memoryLimit < 128) {
+    ini_set('memory_limit', '128M');
+}
+
+use CodeIntel\Console\Application;
+
+try {
+    $application = new Application();
+    $exitCode = $application->run();
+    exit($exitCode);
+} catch (Throwable $e) {
+    fwrite(STDERR, "Fatal error: " . $e->getMessage() . "\n");
+    
+    if (getenv('PHP_CODE_INTEL_DEBUG') === '1') {
+        fwrite(STDERR, $e->getTraceAsString() . "\n");
+    }
+    
+    exit(1);
+}

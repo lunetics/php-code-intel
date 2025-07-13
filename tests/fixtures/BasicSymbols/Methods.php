@@ -7,6 +7,22 @@ namespace TestFixtures\BasicSymbols;
 /**
  * Demonstrates all PHP method types for testing code intelligence tools
  */
+class MethodExamples
+{
+    public function publicMethod(): string
+    {
+        return 'Public method';
+    }
+    
+    public static function staticMethod(): string
+    {
+        return 'Static method';
+    }
+}
+
+/**
+ * Demonstrates all PHP method types for testing code intelligence tools
+ */
 class Methods
 {
     private string $name = 'Methods';
@@ -289,11 +305,19 @@ $result3 = $methods->returnsNullableString();
 $static1 = Methods::staticMethod();
 $static2 = Methods::staticWithSelfReference();
 
+// Static method calls for testing
+MethodExamples::staticMethod();
+
 // 2. Methods with parameters
 $methods->withScalarParams('hello', 123, 3.14, true);
 $methods->withComplexParams(['a', 'b'], new \stdClass(), 'strlen');
 $methods->withNullableParam(null);
 $methods->withNullableParam('not null');
+
+// Instance method calls for testing
+$obj = new MethodExamples();
+$obj->publicMethod();
+$obj?->publicMethod();
 
 // 3. Union type handling
 $union1 = $methods->withUnionParam('string');
@@ -332,6 +356,9 @@ $child = new ChildMethods();
 $child->publicMethod(); // Calls overridden method
 $child->finalMethod(); // Calls parent's final method
 
+// Parent method calls for testing
+parent::makeSound();
+
 // 10. Interface and trait usage
 $complete = new CompleteExample();
 $complete->interfaceMethod();
@@ -352,6 +379,11 @@ $anonymous->anonymousMethod();
 $callable1 = [$methods, 'publicMethod'];
 $callable2 = [Methods::class, 'staticMethod'];
 $callable3 = $methods->publicMethod(...);
+
+// Dynamic method calls for testing
+$calc = new Calculator();
+$method = 'add';
+$calc->$method(1, 2);
 
 // 13. Return type demonstrations
 $void = $methods->returnsVoid(); // void

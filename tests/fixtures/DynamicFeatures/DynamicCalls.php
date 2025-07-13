@@ -326,6 +326,27 @@ function calculate(int $a, int $b): int
 }
 
 /**
+ * Calculator class for testing dynamic method calls
+ */
+class Calculator
+{
+    public function add(int $a, int $b): int
+    {
+        return $a + $b;
+    }
+    
+    public function subtract(int $a, int $b): int
+    {
+        return $a - $b;
+    }
+    
+    public function multiply(int $a, int $b): int
+    {
+        return $a * $b;
+    }
+}
+
+/**
  * Class demonstrating dynamic factory pattern
  */
 class DynamicFactory
@@ -402,3 +423,8 @@ function log_activity(string $type, mixed $data): void
 {
     // Logging logic
 }
+
+// Dynamic method call examples for testing
+$calc = new Calculator();
+$method = 'add';
+$calc->$method(1, 2); // Dynamic method call

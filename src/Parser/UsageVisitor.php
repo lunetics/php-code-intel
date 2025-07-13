@@ -18,12 +18,29 @@ class UsageVisitor extends NodeVisitorAbstract
     private string $targetSymbol;
     private string $filePath;
     private array $fileLines;
+    private string $normalizedTarget;
+    private ?string $targetClass = null;
+    private ?string $targetMethod = null;
 
-    public function __construct(string $targetSymbol, string $filePath)
+    public function __construct(string $targetSymbol, string $filePath, ?string $fileContent = null)
     {
         $this->targetSymbol = $targetSymbol;
         $this->filePath = $filePath;
-        $this->fileLines = file($filePath, FILE_IGNORE_NEW_LINES) ?: [];
+        
+        // Pre-compute normalized target for performance
+        $this->normalizedTarget = ltrim($targetSymbol, '\\');
+        
+        // Pre-parse class::method if applicable
+        if (strpos($targetSymbol, '::') !== false) {
+            [$this->targetClass, $this->targetMethod] = explode('::', $targetSymbol, 2);
+        }
+        
+        // If file content is provided, use it; otherwise read from file
+        if ($fileContent !== null) {
+            $this->fileLines = explode("\n", $fileContent);
+        } else {
+            $this->fileLines = file($filePath, FILE_IGNORE_NEW_LINES) ?: [];
+        }
     }
 
     public function enterNode(Node $node): void
@@ -66,18 +83,45 @@ class UsageVisitor extends NodeVisitorAbstract
             if ($className) {
                 $methodName = $node->name instanceof Node\Identifier ? $node->name->name : null;
                 $fullName = $className . '::' . $methodName;
+                
+                // Check if this matches our target directly
                 if ($this->matchesTarget($fullName) || $this->matchesTarget($className)) {
                     $this->addUsage($line, $code, 'CERTAIN', 'static_call');
+                }
+                
+                // Special handling for parent calls - they could match any parent class method
+                if ($className === 'parent' && $methodName && $this->targetMethod === $methodName) {
+                    $this->addUsage($line, $code, 'CERTAIN', 'parent_call');
                 }
             }
         }
 
-        // Check for method calls
-        if ($node instanceof Node\Expr\MethodCall) {
-            $methodName = $node->name instanceof Node\Identifier ? $node->name->name : null;
-            if ($methodName && str_contains($this->targetSymbol, '::' . $methodName)) {
-                $confidence = str_contains($code, '?->') ? 'PROBABLE' : 'CERTAIN';
-                $this->addUsage($line, $code, $confidence, 'method_call');
+        // Check for method calls (both regular and nullsafe)
+        if ($node instanceof Node\Expr\MethodCall || $node instanceof Node\Expr\NullsafeMethodCall) {
+            $methodName = null;
+            
+            if ($node->name instanceof Node\Identifier) {
+                $methodName = $node->name->name;
+            } elseif ($node->name instanceof Node\Expr\Variable) {
+                // Dynamic method call - we can't determine the exact method at parse time
+                // but we can check if the target symbol method name might match
+                if ($this->targetMethod !== null) {
+                    // For dynamic calls, we add it as a potential match
+                    $this->addUsage($line, $code, 'DYNAMIC', 'dynamic_method_call');
+                }
+                return; // Don't process further for dynamic calls
+            }
+            
+            if ($methodName) {
+                // Check if target symbol contains this method name
+                if (str_contains($this->targetSymbol, '::' . $methodName)) {
+                    $this->addUsage($line, $code, 'CERTAIN', 'method_call');
+                }
+                
+                // Also check if we're looking for a specific class::method and this matches the method part
+                if ($this->targetMethod !== null && $methodName === $this->targetMethod) {
+                    $this->addUsage($line, $code, 'CERTAIN', 'method_call');
+                }
             }
         }
 
@@ -140,10 +184,10 @@ class UsageVisitor extends NodeVisitorAbstract
     private function matchesTarget(string $name): bool
     {
         // Remove leading backslash for comparison
-        $name = ltrim($name, '\\');
-        $target = ltrim($this->targetSymbol, '\\');
+        $normalizedName = ltrim($name, '\\');
         
-        return $name === $target || str_ends_with($target, '\\' . $name);
+        return $normalizedName === $this->normalizedTarget || 
+               str_ends_with($this->normalizedTarget, '\\' . $normalizedName);
     }
 
     private function getCodeAtLine(int $line): string
