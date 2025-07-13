@@ -25,6 +25,7 @@ class ConfidenceScorer
         if (preg_match('/new\s+[A-Z]\w*\s*\(/', $code) ||           // new ClassName()
             preg_match('/[A-Z]\w*::[a-zA-Z_]\w*\s*\(/', $code) ||   // ClassName::method()
             preg_match('/[A-Z]\w*::[A-Z_][A-Z0-9_]*/', $code) ||    // ClassName::CONSTANT
+            preg_match('/function\s+\w+\s*\([^)]*[A-Z]\w+\s+\$/', $code) || // function(Type $param)
             str_contains($code, 'instanceof') ||
             str_contains($code, '::class') ||
             str_contains($code, 'self::') ||

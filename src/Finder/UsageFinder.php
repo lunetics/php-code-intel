@@ -5,15 +5,25 @@ declare(strict_types=1);
 namespace CodeIntel\Finder;
 
 use CodeIntel\Index\SymbolIndex;
+use CodeIntel\Parser\UsageVisitor;
+use PhpParser\Error;
+use PhpParser\ParserFactory;
+use PhpParser\NodeTraverser;
 
 /**
  * Finds usages of symbols in the indexed codebase
  */
 class UsageFinder
 {
+    private $parser;
+    private ConfidenceScorer $scorer;
+    
     public function __construct(
         private SymbolIndex $index
-    ) {}
+    ) {
+        $this->parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
+        $this->scorer = new ConfidenceScorer();
+    }
     
     /**
      * Find all usages of a symbol
@@ -23,15 +33,47 @@ class UsageFinder
      */
     public function find(string $symbolName): array
     {
-        // For now, return empty array to prevent exceptions
-        // Tests expect empty array when no usages found
+        $allUsages = [];
+        $indexedFiles = $this->index->getIndexedFiles();
         
-        // TODO: Implement actual usage finding logic:
-        // 1. Get files from index
-        // 2. Parse files with php-parser
-        // 3. Find usages using AST visitors
-        // 4. Return structured usage data
+        foreach ($indexedFiles as $filePath) {
+            $usages = $this->findUsagesInFile($symbolName, $filePath);
+            $allUsages = array_merge($allUsages, $usages);
+        }
         
-        return [];
+        return $allUsages;
+    }
+    
+    private function findUsagesInFile(string $symbolName, string $filePath): array
+    {
+        try {
+            $code = file_get_contents($filePath);
+            if ($code === false) {
+                return [];
+            }
+            
+            $ast = $this->parser->parse($code);
+            if ($ast === null) {
+                return [];
+            }
+            
+            $visitor = new UsageVisitor($symbolName, $filePath);
+            $traverser = new NodeTraverser();
+            $traverser->addVisitor($visitor);
+            $traverser->traverse($ast);
+            
+            $usages = $visitor->getUsages();
+            
+            // Apply confidence scoring
+            foreach ($usages as &$usage) {
+                $usage['confidence'] = $this->scorer->score($usage['code']);
+            }
+            
+            return $usages;
+            
+        } catch (Error $e) {
+            // Parsing error - skip this file
+            return [];
+        }
     }
 }

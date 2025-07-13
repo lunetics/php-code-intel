@@ -393,6 +393,17 @@ var_dump($article instanceof Printable);            // true
 var_dump($complex instanceof AbstractShape);        // true
 var_dump($complex instanceof Printable);            // true
 
+// Class reference examples
+$className = SimpleClass::class;
+echo "Class name: " . $className . "\n";
+
+// Type hint examples  
+function useClass(SimpleClass $instance): void {
+    echo "Using instance of: " . get_class($instance) . "\n";
+}
+
+useClass($simple);
+
 // Polymorphism examples
 function printShape(AbstractShape $shape): void {
     echo sprintf("Shape color: %s, area: %.2f\n", $shape->getColor(), $shape->getArea());

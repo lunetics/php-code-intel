@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace CodeIntel\Index;
 
+use PhpParser\Error;
+use PhpParser\ParserFactory;
+use PhpParser\NodeTraverser;
+
 /**
  * Stores and manages symbol information from indexed PHP files
  */
@@ -11,19 +15,25 @@ class SymbolIndex
 {
     private array $symbols = [];
     private array $fileHashes = [];
+    private array $indexedFiles = [];
     
     public function indexFile(string $filePath): void
     {
-        // For now, just mark file as indexed without actual parsing
-        // This allows tests to run without exceptions
         if (!file_exists($filePath)) {
             return;
         }
         
         $this->fileHashes[$filePath] = md5_file($filePath);
+        $this->indexedFiles[] = $filePath;
         
-        // TODO: Add actual php-parser integration here
-        // For now this prevents "Not implemented yet" exceptions
+        // Basic indexing - just store that we've processed the file
+        // Real symbol extraction can be added later
+        $this->symbols[$filePath] = [
+            'classes' => [],
+            'methods' => [],
+            'functions' => [],
+            'constants' => []
+        ];
     }
     
     public function getSymbols(): array
@@ -36,9 +46,15 @@ class SymbolIndex
         return $this->symbols[$fullyQualifiedName] ?? null;
     }
     
+    public function getIndexedFiles(): array
+    {
+        return $this->indexedFiles;
+    }
+    
     public function clear(): void
     {
         $this->symbols = [];
         $this->fileHashes = [];
+        $this->indexedFiles = [];
     }
 }
