@@ -1,6 +1,6 @@
 # PHP Code Intelligence Tool - Multi-Version Testing
 
-.PHONY: help test test-all test-80 test-81 test-82 test-83 benchmark clean
+.PHONY: help test test-all test-80 test-81 test-82 test-83 benchmark clean phpstan code-quality
 
 # Colors
 BLUE := \033[36m
@@ -97,3 +97,20 @@ clean: ## Clean up
 install-deps: ## Install Composer dependencies for testing
 	@echo "$(YELLOW)Installing dependencies...$(NC)"
 	composer install
+
+phpstan: ## Run PHPStan static analysis
+	@echo "$(YELLOW)Running PHPStan static analysis...$(NC)"
+	composer phpstan
+
+phpstan-baseline: ## Generate PHPStan baseline
+	@echo "$(YELLOW)Generating PHPStan baseline...$(NC)"
+	composer phpstan-baseline
+
+code-quality: ## Run all code quality checks (PHPStan + Tests)
+	@echo "$(BLUE)Running code quality checks...$(NC)"
+	@echo ""
+	@$(MAKE) phpstan || echo "$(RED)❌ PHPStan failed$(NC)"
+	@echo ""
+	@$(MAKE) test || echo "$(RED)❌ Tests failed$(NC)"
+	@echo ""
+	@echo "$(GREEN)✅ Code quality checks complete!$(NC)"

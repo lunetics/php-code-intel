@@ -1,0 +1,48 @@
+# PHPStan Configuration for PHP Code Intelligence Tool
+#
+# Static analysis configuration for development quality assurance
+# Helps catch type errors, undefined variables, and other potential issues
+
+parameters:
+    # Analysis level (0-9, where 9 is the strictest)
+    # Start with level 6 for gradual adoption, can increase later
+    level: 6
+    
+    # Paths to analyze
+    paths:
+        - src
+        - tests/Unit
+        - tests/Integration
+        - bin
+    
+    # Exclude problematic paths
+    excludePaths:
+        - tests/fixtures/*
+        - vendor/*
+        - cache/*
+        - coverage/*
+        - build/*
+    
+    # Bootstrap file for PHPStan
+    bootstrapFiles:
+        - vendor/autoload.php
+    
+    # Additional checks for stricter analysis
+    checkExplicitMixedMissingReturn: true
+    checkFunctionNameCase: true
+    checkInternalClassCaseSensitivity: true
+    
+    # Enable stricter analysis
+    treatPhpDocTypesAsCertain: false
+    
+    # Ignore errors for specific patterns (if needed)
+    ignoreErrors:
+        # Ignore dynamic properties in test fixtures (they're test data)
+        - 
+            message: '#Access to an undefined property#'
+            path: tests/fixtures/*
+        
+        # Allow mixed types in test fixtures for comprehensive testing
+        -
+            message: '#has no typehint specified#'
+            path: tests/fixtures/*

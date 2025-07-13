@@ -169,8 +169,9 @@ Machine-readable structured data:
 - ✅ parent:: and self:: calls
 - ✅ Complex inheritance hierarchies
 
-## 🧪 Testing
+## 🧪 Testing & Quality Assurance
 
+### Running Tests
 ```bash
 # Run all tests
 composer test
@@ -183,10 +184,28 @@ vendor/bin/phpunit tests/Unit/
 vendor/bin/phpunit tests/Integration/
 ```
 
+### Static Analysis
+```bash
+# Run PHPStan analysis
+composer phpstan
+
+# Run all quality checks (PHPStan + Tests)
+composer code-quality
+
+# Using Makefile (with Docker)
+make phpstan
+make code-quality
+```
+
 ### Test Coverage
 - **43 tests, 156 assertions**
 - **100% test success rate**
 - **Comprehensive fixture coverage**
+
+### Code Quality
+- **PHPStan Level 6** - Static analysis for type safety
+- **PSR-4 Autoloading** - Standard namespace conventions
+- **Strict Types** - All files use `declare(strict_types=1)`
 
 ## 🏗️ Architecture
 
