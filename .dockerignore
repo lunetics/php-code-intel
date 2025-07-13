@@ -1,0 +1,9 @@
+.git
+vendor
+coverage
+.idea
+.vscode
+*.phar
+.phpunit.cache
+cache/*
+!cache/.gitkeep

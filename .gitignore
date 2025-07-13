@@ -1,0 +1,56 @@
+# Composer
+/vendor/
+composer.lock
+
+# PHPUnit
+.phpunit.cache/
+.phpunit.result.cache
+/coverage/
+/phpunit.xml.dist.bak
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.settings/
+.buildpath
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific
+/cache/*
+!/cache/.gitkeep
+/build/*.phar
+*.phar
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+/logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# PHP CS Fixer
+.php-cs-fixer.cache
+.php_cs.cache
+
+# Testing
+/test-results/
+/tmp/
