@@ -23,8 +23,15 @@ class UsageFinder
      */
     public function find(string $symbolName): array
     {
-        // TODO: Implement usage finding
-        // This will search through indexed files for references to the symbol
+        // For now, return empty array to prevent exceptions
+        // Tests expect empty array when no usages found
+        
+        // TODO: Implement actual usage finding logic:
+        // 1. Get files from index
+        // 2. Parse files with php-parser
+        // 3. Find usages using AST visitors
+        // 4. Return structured usage data
+        
         return [];
     }
 }
