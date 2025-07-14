@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master, develop ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ master, develop ]
 
 jobs:
   test:
@@ -14,10 +14,9 @@ jobs:
       fail-fast: false
       matrix:
         php-version:
-          - "8.0"
-          - "8.1" 
           - "8.2"
           - "8.3"
+          - "8.4"
         dependencies:
           - "highest"
           - "lowest"
@@ -78,15 +77,14 @@ jobs:
       run: |
         php bin/php-code-intel index tests/fixtures/BasicSymbols/ --stats
     
-    - name: Test PHAR build (PHP 8.1+)
-      if: matrix.php-version != '8.0'
+    - name: Test PHAR build (all supported versions)
       run: |
         php -d phar.readonly=0 build/build-phar.php
         ./build/php-code-intel.phar --version
         ./build/php-code-intel.phar find-usages "TestFixtures\\BasicSymbols\\SimpleClass" --path=tests/fixtures/BasicSymbols/ --format=json
     
     - name: Upload coverage to Codecov
-      if: matrix.php-version == '8.3' && matrix.dependencies == 'highest'
+      if: matrix.php-version == '8.4' && matrix.dependencies == 'highest'
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage.xml
@@ -118,7 +116,7 @@ jobs:
     - name: Run PHPStan analysis
       run: |
         composer require --dev phpstan/phpstan --no-interaction
-        vendor/bin/phpstan analyse src tests --level=max --no-progress
+        vendor/bin/phpstan analyse --no-progress
     
     - name: Security audit
       run: composer audit

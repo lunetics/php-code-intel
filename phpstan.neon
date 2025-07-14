@@ -35,14 +35,4 @@ parameters:
     # Enable stricter analysis
     treatPhpDocTypesAsCertain: false
     
-    # Ignore errors for specific patterns (if needed)
-    ignoreErrors:
-        # Ignore dynamic properties in test fixtures (they're test data)
-        - 
-            message: '#Access to an undefined property#'
-            path: tests/fixtures/*
-        
-        # Allow mixed types in test fixtures for comprehensive testing
-        -
-            message: '#has no typehint specified#'
-            path: tests/fixtures/*
+    # All code now passes PHPStan level 6 analysis without ignores

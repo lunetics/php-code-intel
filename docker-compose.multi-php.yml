@@ -56,3 +56,17 @@ services:
     environment:
       - PHP_MEMORY_LIMIT=512M
       - PHP_VERSION=8.3
+
+  php84:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.multi-php
+      args:
+        PHP_VERSION: "8.4"
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: tail -f /dev/null
+    environment:
+      - PHP_MEMORY_LIMIT=512M
+      - PHP_VERSION=8.4

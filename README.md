@@ -15,7 +15,7 @@ A powerful, AST-based PHP symbol analysis tool designed for accurate refactoring
 
 ## 📋 Requirements
 
-- **PHP 8.2+** (82% market coverage - PHP 8.2/8.3)
+- **PHP 8.2+** (Supports PHP 8.2, 8.3, 8.4)
 - Extensions: json, mbstring, tokenizer
 - Memory: 128MB+ recommended
 

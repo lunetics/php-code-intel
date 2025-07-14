@@ -36,7 +36,7 @@ class UsageFinder
      * Find all usages of a symbol
      * 
      * @param string $symbolName Fully qualified symbol name
-     * @return array Array of usage information
+     * @return array<array{file: string, line: int, code: string, confidence: string, type: string, context: array{start: int, end: int, lines: array<string>}}> Array of usage information
      */
     public function find(string $symbolName): array
     {
@@ -52,6 +52,9 @@ class UsageFinder
         return $allUsages;
     }
     
+    /**
+     * @return array<array{file: string, line: int, code: string, confidence: string, type: string, context: array{start: int, end: int, lines: array<string>}}>
+     */
     private function findUsagesInFile(string $symbolName, string $filePath): array
     {
         try {

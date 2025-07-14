@@ -93,7 +93,7 @@ class VersionCommand extends Command
         $io->section('Detailed System Information');
         
         $io->definitionList(
-            ['Operating System' => PHP_OS_FAMILY . ' (' . php_uname('s r') . ')'],
+            ['Operating System' => PHP_OS_FAMILY . ' (' . php_uname('s') . ' ' . php_uname('r') . ')'],
             ['Architecture' => php_uname('m')],
             ['SAPI' => PHP_SAPI],
             ['Zend Engine' => zend_version()],

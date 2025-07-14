@@ -189,14 +189,13 @@ class EndToEndTest extends TestCase
     {
         // Test with non-existent symbol
         $usages = $this->finder->find('NonExistent\Class\Name');
-        $this->assertIsArray($usages);
         $this->assertEmpty($usages);
         
         // Test with malformed symbol names
         $usages = $this->finder->find('');
-        $this->assertIsArray($usages);
+        $this->assertEmpty($usages);
         
         $usages = $this->finder->find('\\\\\\InvalidName');
-        $this->assertIsArray($usages);
+        $this->assertEmpty($usages);
     }
 }

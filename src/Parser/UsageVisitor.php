@@ -12,14 +12,22 @@ use PhpParser\NodeVisitorAbstract;
  */
 class UsageVisitor extends NodeVisitorAbstract
 {
+    /**
+     * @var array<array{file: string, line: int, code: string, confidence: string, type: string, context: array{start: int, end: int, lines: array<string>}}>
+     */
     private array $usages = [];
     private string $currentNamespace = '';
+    /**
+     * @var array<string, string>
+     */
     private array $useStatements = [];
     private string $targetSymbol;
     private string $filePath;
+    /**
+     * @var array<string>
+     */
     private array $fileLines;
     private string $normalizedTarget;
-    private ?string $targetClass = null;
     private ?string $targetMethod = null;
 
     public function __construct(string $targetSymbol, string $filePath, ?string $fileContent = null)
@@ -32,7 +40,7 @@ class UsageVisitor extends NodeVisitorAbstract
         
         // Pre-parse class::method if applicable
         if (strpos($targetSymbol, '::') !== false) {
-            [$this->targetClass, $this->targetMethod] = explode('::', $targetSymbol, 2);
+            [, $this->targetMethod] = explode('::', $targetSymbol, 2);
         }
         
         // If file content is provided, use it; otherwise read from file
@@ -43,12 +51,12 @@ class UsageVisitor extends NodeVisitorAbstract
         }
     }
 
-    public function enterNode(Node $node): void
+    public function enterNode(Node $node): ?Node
     {
         // Track namespace context
         if ($node instanceof Node\Stmt\Namespace_) {
             $this->currentNamespace = $node->name ? $node->name->toString() : '';
-            return;
+            return null;
         }
 
         // Track use statements
@@ -57,11 +65,13 @@ class UsageVisitor extends NodeVisitorAbstract
                 $alias = $use->alias ? $use->alias->toString() : $use->name->getLast();
                 $this->useStatements[$alias] = $use->name->toString();
             }
-            return;
+            return null;
         }
 
         // Find symbol usages
         $this->checkForUsage($node);
+        
+        return null;
     }
 
     private function checkForUsage(Node $node): void
@@ -150,6 +160,9 @@ class UsageVisitor extends NodeVisitorAbstract
         }
     }
 
+    /**
+     * @param Node\Name|string|mixed $class
+     */
     private function resolveClassName($class): ?string
     {
         if ($class instanceof Node\Name) {
@@ -207,6 +220,9 @@ class UsageVisitor extends NodeVisitorAbstract
         ];
     }
 
+    /**
+     * @return array{start: int, end: int, lines: array<string>}
+     */
     private function getContext(int $line): array
     {
         $start = max(1, $line - 2);
@@ -224,6 +240,9 @@ class UsageVisitor extends NodeVisitorAbstract
         ];
     }
 
+    /**
+     * @return array<array{file: string, line: int, code: string, confidence: string, type: string, context: array{start: int, end: int, lines: array<string>}}>
+     */
     public function getUsages(): array
     {
         return $this->usages;

@@ -236,8 +236,8 @@ EOF
     }
     
     /**
-     * @param array<array{file: string, line: int, code: string, confidence: string, context: array{start: int, lines: array<string>}}> $usages
-     * @return array<array{file: string, line: int, code: string, confidence: string, context: array{start: int, lines: array<string>}}>
+     * @param array<array{file: string, line: int, code: string, confidence: string, type: string, context: array{start: int, end: int, lines: array<string>}}> $usages
+     * @return array<array{file: string, line: int, code: string, confidence: string, type: string, context: array{start: int, end: int, lines: array<string>}}>
      */
     private function filterByConfidence(array $usages, string $minConfidence): array
     {
@@ -251,7 +251,7 @@ EOF
     }
     
     /**
-     * @param array<array{file: string, line: int, code: string, confidence: string, context: array{start: int, lines: array<string>}}> $usages
+     * @param array<array{file: string, line: int, code: string, confidence: string, type: string, context: array{start: int, end: int, lines: array<string>}}> $usages
      */
     private function formatOutput(array $usages, string $format): string
     {
@@ -269,7 +269,7 @@ EOF
     }
     
     /**
-     * @param array<array{file: string, line: int, code: string, confidence: string, context: array{start: int, lines: array<string>}}> $usages
+     * @param array<array{file: string, line: int, code: string, confidence: string, type: string, context: array{start: int, end: int, lines: array<string>}}> $usages
      */
     private function formatAsTable(array $usages): string
     {
@@ -296,7 +296,7 @@ EOF
     }
     
     /**
-     * @param array<array{file: string, line: int, code: string, confidence: string, context: array{start: int, lines: array<string>}}> $usages
+     * @param array<array{file: string, line: int, code: string, confidence: string, type: string, context: array{start: int, end: int, lines: array<string>}}> $usages
      */
     private function formatForClaude(array $usages): string
     {
