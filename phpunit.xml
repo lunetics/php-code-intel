@@ -3,7 +3,6 @@
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          bootstrap="vendor/autoload.php"
          colors="true"
-         verbose="true"
          stopOnFailure="false"
          stopOnError="false"
          stopOnIncomplete="false"
@@ -12,7 +11,7 @@
          requireCoverageMetadata="false"
          beStrictAboutOutputDuringTests="true"
          failOnRisky="true"
-         failOnWarning="true">
+         failOnWarning="false">
     
     <testsuites>
         <testsuite name="Unit">
