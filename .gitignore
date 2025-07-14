@@ -47,6 +47,9 @@ Thumbs.db
 *.backup
 *.old
 
+# Development files
+CURRENT_PLAN.md
+
 # PHP CS Fixer
 .php-cs-fixer.cache
 .php_cs.cache
