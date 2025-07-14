@@ -10,6 +10,7 @@ A powerful, AST-based PHP symbol analysis tool designed for accurate refactoring
 - **Inheritance Analysis**: Full support for interfaces, traits, abstract classes, and complex hierarchies
 - **Multiple Output Formats**: JSON, Table, and Claude-optimized formats
 - **High Performance**: Memory-optimized processing for large codebases
+- **Robust Error Handling**: Comprehensive error logging with categorization
 - **Docker Ready**: Complete containerization for consistent development
 - **PHAR Distribution**: Self-contained executable for easy deployment
 
@@ -198,14 +199,16 @@ make code-quality
 ```
 
 ### Test Coverage
-- **43 tests, 156 assertions**
+- **73 tests, 255 assertions**
 - **100% test success rate**
 - **Comprehensive fixture coverage**
+- **30 dedicated error handling tests**
 
 ### Code Quality
-- **PHPStan Level 6** - Static analysis for type safety
+- **PHPStan Level 9** - Maximum static analysis strictness
 - **PSR-4 Autoloading** - Standard namespace conventions
 - **Strict Types** - All files use `declare(strict_types=1)`
+- **PSR-3 Compatible Logging** - Comprehensive error handling
 
 ## 🏗️ Architecture
 
@@ -290,10 +293,11 @@ php -m | grep -E "(json|mbstring|tokenizer)"
 ## 📚 Documentation
 
 ### For Developers
-- **[CLAUDE.md](CLAUDE.md)** - Instructions for Claude integration
-- **[PROJECT_TRACKER.md](PROJECT_TRACKER.md)** - Development progress
-- **[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)** - Technical roadmap
-- **[TDD_TEST_PLAN.md](TDD_TEST_PLAN.md)** - Test specifications
+- **[docs/API_REFERENCE.md](docs/API_REFERENCE.md)** - Complete API documentation
+- **[docs/ERROR_HANDLING.md](docs/ERROR_HANDLING.md)** - Error logging system guide
+- **[docs/ADVANCED_USAGE.md](docs/ADVANCED_USAGE.md)** - Complex usage scenarios
+- **[docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)** - Development guidelines
+- **[docs/FAQ.md](docs/FAQ.md)** - Frequently asked questions
 
 ### Technical References
 - **[docs/SYMBOL_TYPES.md](docs/SYMBOL_TYPES.md)** - PHP symbol reference
