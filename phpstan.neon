@@ -5,8 +5,8 @@
 
 parameters:
     # Analysis level (0-9, where 9 is the strictest)
-    # Upgraded to level 8 for maximum type safety
-    level: 8
+    # Upgraded to level 9 for absolute maximum strictness
+    level: 9
     
     # Paths to analyze
     paths:

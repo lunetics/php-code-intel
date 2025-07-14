@@ -88,23 +88,52 @@ EOF
     {
         $io = new SymfonyStyle($input, $output);
         
+        // Validate and type-cast input parameters to ensure type safety
         $symbol = $input->getArgument('symbol');
+        if (!is_string($symbol)) {
+            $io->error('Symbol argument must be a string');
+            return Command::FAILURE;
+        }
+        
         $paths = $input->getOption('path');
+        if (!is_array($paths)) {
+            $io->error('Paths option must be an array');
+            return Command::FAILURE;
+        }
+        // Ensure all paths are strings
+        $paths = array_filter($paths, 'is_string');
+        
         $format = $input->getOption('format');
-        $excludePaths = $input->getOption('exclude');
+        if (!is_string($format)) {
+            $io->error('Format option must be a string');
+            return Command::FAILURE;
+        }
+        
+        $excludePaths = $input->getOption('exclude') ?? [];
+        if (!is_array($excludePaths)) {
+            $io->error('Exclude paths option must be an array');
+            return Command::FAILURE;
+        }
+        // Ensure all exclude paths are strings
+        $excludePaths = array_filter($excludePaths, 'is_string');
+        
         $minConfidence = $input->getOption('confidence');
+        if (!is_string($minConfidence)) {
+            $io->error('Confidence option must be a string');
+            return Command::FAILURE;
+        }
         
         // Validate confidence level
         $validConfidences = ['CERTAIN', 'PROBABLE', 'POSSIBLE', 'DYNAMIC'];
         if (!in_array($minConfidence, $validConfidences)) {
-            $io->error("Invalid confidence level: $minConfidence. Valid options: " . implode(', ', $validConfidences));
+            $io->error(sprintf('Invalid confidence level: %s. Valid options: %s', $minConfidence, implode(', ', $validConfidences)));
             return Command::FAILURE;
         }
 
         // Validate output format
         $validFormats = ['json', 'table', 'claude'];
         if (!in_array($format, $validFormats)) {
-            $io->error("Invalid format: $format. Valid options: " . implode(', ', $validFormats));
+            $io->error(sprintf('Invalid format: %s. Valid options: %s', $format, implode(', ', $validFormats)));
             return Command::FAILURE;
         }
 
@@ -143,7 +172,7 @@ EOF
 
             if (empty($usages)) {
                 if ($format === 'claude') {
-                    $io->note("No usages found for symbol: $symbol");
+                    $io->note(sprintf('No usages found for symbol: %s', $symbol));
                 } else {
                     $output->writeln($this->formatOutput($usages, $format));
                 }
@@ -206,6 +235,11 @@ EOF
         );
         
         foreach ($iterator as $file) {
+            // Type check and ensure we have a SplFileInfo object
+            if (!($file instanceof \SplFileInfo)) {
+                continue;
+            }
+            
             if ($file->isFile() && 
                 $file->getExtension() === 'php' && 
                 $this->shouldIncludeFile($file->getPathname(), $excludePaths)
