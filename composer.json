@@ -25,7 +25,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "CodeIntel\\Tests\\": "tests/"
+            "CodeIntel\\Tests\\": "tests/",
+            "TestFixtures\\": "tests/fixtures/"
         }
     },
     "scripts": {
