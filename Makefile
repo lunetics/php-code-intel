@@ -1,6 +1,6 @@
 # PHP Code Intelligence Tool - Multi-Version Testing
 
-.PHONY: help test test-all test-82 test-83 test-84 benchmark clean phpstan code-quality
+.PHONY: help test test-all test-82 test-83 test-84 benchmark clean phpstan code-quality build-runtime build-runtime-dev clean-runtime test-runtime analyze-runtime index-runtime runtime-compose runtime-dev-compose runtime-help
 
 # Colors
 BLUE := \033[36m
@@ -107,3 +107,65 @@ code-quality: ## Run all code quality checks (PHPStan + Tests)
 	@$(MAKE) test || echo "$(RED)❌ Tests failed$(NC)"
 	@echo ""
 	@echo "$(GREEN)✅ Code quality checks complete!$(NC)"
+
+# Docker Runtime Container Commands
+build-runtime: ## Build runtime container for production use
+	@echo "$(YELLOW)Building PHP Code Intelligence runtime container...$(NC)"
+	docker build -f Dockerfile.runtime -t php-code-intel:runtime .
+	@echo "$(GREEN)✅ Runtime container built: php-code-intel:runtime$(NC)"
+
+build-runtime-dev: ## Build development runtime container with dev dependencies
+	@echo "$(YELLOW)Building PHP Code Intelligence development runtime container...$(NC)"
+	docker build -f Dockerfile.runtime.dev -t php-code-intel:runtime-dev .
+	@echo "$(GREEN)✅ Development runtime container built: php-code-intel:runtime-dev$(NC)"
+
+clean-runtime: ## Remove runtime container images
+	@echo "$(YELLOW)Removing runtime container images...$(NC)"
+	docker rmi php-code-intel:runtime 2>/dev/null || true
+	docker rmi php-code-intel:runtime-dev 2>/dev/null || true
+	@echo "$(GREEN)✅ Runtime container images removed$(NC)"
+
+test-runtime: build-runtime ## Test runtime container
+	@echo "$(YELLOW)Testing runtime container...$(NC)"
+	docker run --rm php-code-intel:runtime --version
+	docker run --rm -v $(PWD):/workspace php-code-intel:runtime \
+		find-usages "TestFixtures\\BasicSymbols\\SimpleClass" --path=/workspace/tests/fixtures/BasicSymbols/ --format=json
+	@echo "$(GREEN)✅ Runtime container test complete!$(NC)"
+
+analyze-runtime: build-runtime ## Run symbol analysis using runtime container
+	@echo "$(YELLOW)Running symbol analysis with runtime container...$(NC)"
+	docker run --rm -v $(PWD):/workspace php-code-intel:runtime \
+		find-usages "TestFixtures\\BasicSymbols\\SimpleClass" --path=/workspace/tests/fixtures/ --format=json
+
+index-runtime: build-runtime ## Index files using runtime container
+	@echo "$(YELLOW)Indexing files with runtime container...$(NC)"
+	docker run --rm -v $(PWD):/workspace php-code-intel:runtime \
+		index /workspace/tests/fixtures/
+
+# Docker Compose Runtime Commands
+runtime-compose: ## Run analysis using Docker Compose runtime
+	@echo "$(YELLOW)Running analysis with Docker Compose runtime...$(NC)"
+	docker-compose -f docker-compose.runtime.yml build php-code-intel
+	docker-compose -f docker-compose.runtime.yml run --rm php-code-intel \
+		find-usages "TestFixtures\\BasicSymbols\\SimpleClass" --path=/workspace/tests/fixtures/
+
+runtime-dev-compose: ## Run development analysis using Docker Compose
+	@echo "$(YELLOW)Running development analysis with Docker Compose...$(NC)"
+	docker-compose -f docker-compose.runtime.yml build php-code-intel-dev
+	docker-compose -f docker-compose.runtime.yml run --rm php-code-intel-dev \
+		find-usages "TestFixtures\\BasicSymbols\\SimpleClass" --path=/workspace/tests/fixtures/
+
+runtime-help: ## Show Docker runtime container usage examples
+	@echo "$(BLUE)Docker Runtime Container Usage Examples:$(NC)"
+	@echo "$(GREEN)Build runtime container:$(NC)"
+	@echo "  make build-runtime"
+	@echo ""
+	@echo "$(GREEN)Run analysis:$(NC)"
+	@echo "  docker run --rm -v \$$(pwd):/workspace php-code-intel:runtime find-usages \"App\\\\User\" --path=src/"
+	@echo ""
+	@echo "$(GREEN)Index project:$(NC)"
+	@echo "  docker run --rm -v \$$(pwd):/workspace php-code-intel:runtime index src/"
+	@echo ""
+	@echo "$(GREEN)With shell alias:$(NC)"
+	@echo "  alias pci='docker run --rm -v \$$(pwd):/workspace php-code-intel:runtime'"
+	@echo "  pci find-usages \"App\\\\User\" --format=json"

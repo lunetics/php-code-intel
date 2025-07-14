@@ -1,0 +1,41 @@
+FROM php:8.4-cli-alpine
+
+# Install system dependencies including dev tools
+RUN apk add --no-cache \
+    git \
+    unzip \
+    libzip-dev \
+    && docker-php-ext-install zip
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Create app directory
+WORKDIR /app
+
+# Copy composer files first for better caching
+COPY composer.json composer.lock ./
+
+# Install with dev dependencies for development
+RUN composer install --optimize-autoloader --no-interaction
+
+# Copy source code
+COPY . .
+
+# Install and enable Xdebug for debugging
+RUN pecl install xdebug \
+    && docker-php-ext-enable xdebug
+
+# Set development PHP configuration
+RUN echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/memory.ini \
+    && echo "opcache.enable_cli = 1" > /usr/local/etc/php/conf.d/opcache.ini \
+    && echo "xdebug.mode = debug" > /usr/local/etc/php/conf.d/xdebug.ini
+
+# Make executable
+RUN chmod +x bin/php-code-intel
+
+# Create workspace
+WORKDIR /workspace
+
+# Set entrypoint
+ENTRYPOINT ["php", "/app/bin/php-code-intel"]

@@ -40,7 +40,20 @@ composer install
 ./build/php-code-intel.phar --version
 ```
 
-### Option 3: Docker
+### Option 3: Docker Runtime Container (Recommended)
+```bash
+# Build runtime container
+make build-runtime
+
+# Use with current project
+docker run --rm -v $(pwd):/workspace php-code-intel:runtime find-usages "App\\User" --path=src/
+
+# Or setup shell function for convenience
+./scripts/runtime-setup.sh
+php-code-intel find-usages "App\\User" --path=src/
+```
+
+### Option 4: Docker Compose
 ```bash
 docker compose up -d app
 docker compose exec app php bin/php-code-intel --version
@@ -49,6 +62,8 @@ docker compose exec app php bin/php-code-intel --version
 ## 🎯 Usage
 
 ### Find Symbol Usages
+
+#### Local Installation
 ```bash
 # Basic usage
 php-code-intel find-usages "App\User"
@@ -66,6 +81,24 @@ php-code-intel find-usages "Service::method" --confidence=CERTAIN
 
 # Exclude paths
 php-code-intel find-usages "MyClass" --exclude=vendor --exclude=tests
+```
+
+#### Docker Runtime Container
+```bash
+# Build runtime container (one-time setup)
+make build-runtime
+
+# Basic usage with Docker
+docker run --rm -v $(pwd):/workspace php-code-intel:runtime find-usages "App\\User" --path=src/
+
+# With shell function (after running ./scripts/runtime-setup.sh)
+php-code-intel find-usages "App\\User" --path=src/
+php-code-intel find-usages "App\\User" --format=json --confidence=CERTAIN
+
+# Using Make commands
+make analyze-runtime      # Run sample analysis
+make index-runtime        # Index project files
+make runtime-help         # Show usage examples
 ```
 
 ### Index Files
@@ -296,6 +329,7 @@ php -m | grep -E "(json|mbstring|tokenizer)"
 - **[docs/API_REFERENCE.md](docs/API_REFERENCE.md)** - Complete API documentation
 - **[docs/ERROR_HANDLING.md](docs/ERROR_HANDLING.md)** - Error logging system guide
 - **[docs/ADVANCED_USAGE.md](docs/ADVANCED_USAGE.md)** - Complex usage scenarios
+- **[docs/DOCKER_RUNTIME.md](docs/DOCKER_RUNTIME.md)** - Docker runtime container guide
 - **[docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)** - Development guidelines
 - **[docs/FAQ.md](docs/FAQ.md)** - Frequently asked questions
 

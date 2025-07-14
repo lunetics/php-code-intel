@@ -6,6 +6,25 @@ This FAQ addresses common questions, troubleshooting scenarios, and best practic
 
 ## Installation & Setup
 
+### Q: Can I use this tool without installing PHP locally?
+
+**A:** Yes! Use the Docker runtime container approach:
+
+```bash
+# One-time setup
+make build-runtime
+
+# Use with any project
+docker run --rm -v $(pwd):/workspace php-code-intel:runtime \
+  find-usages "App\\User" --path=src/
+
+# Or setup shell function for convenience
+./scripts/runtime-setup.sh
+php-code-intel find-usages "App\\User" --path=src/
+```
+
+This approach works on any system with Docker, regardless of local PHP installation.
+
 ### Q: What PHP versions are supported?
 
 **A:** The tool supports PHP 8.2, 8.3, and 8.4. PHP 8.0/8.1 are not supported due to modern dependency requirements.
@@ -58,6 +77,54 @@ php -d phar.readonly=0 build/build-phar.php
 
 # Or set in php.ini
 echo "phar.readonly = Off" >> /etc/php/8.4/cli/php.ini
+```
+
+### Q: How do I build the Docker runtime container?
+
+**A:** Use the provided Make commands:
+
+```bash
+# Build production runtime container
+make build-runtime
+
+# Build development container with debugging tools
+make build-runtime-dev
+
+# Test the container
+make test-runtime
+
+# Clean up containers
+make clean-runtime
+```
+
+### Q: Can I use the runtime container in CI/CD pipelines?
+
+**A:** Yes! Here's a GitHub Actions example:
+
+```yaml
+- name: Run PHP Code Intelligence Analysis
+  run: |
+    make build-runtime
+    docker run --rm -v ${{ github.workspace }}:/workspace php-code-intel:runtime \
+      find-usages "App\\Models\\User" --path=src/ --format=json > analysis.json
+```
+
+### Q: How do I customize the Docker runtime container?
+
+**A:** You can extend the base runtime container:
+
+```dockerfile
+FROM php-code-intel:runtime
+
+# Add custom PHP extensions
+RUN docker-php-ext-install pdo_mysql
+
+# Add custom tools
+RUN apk add --no-cache jq
+
+# Custom entrypoint
+COPY custom-entrypoint.sh /usr/local/bin/
+ENTRYPOINT ["custom-entrypoint.sh"]
 ```
 
 ## Usage & Configuration

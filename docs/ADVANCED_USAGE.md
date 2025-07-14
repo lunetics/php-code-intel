@@ -2,7 +2,106 @@
 
 ## Overview
 
-This guide covers advanced usage scenarios, complex integrations, and expert-level features of the PHP Code Intelligence Tool.
+This guide covers advanced usage scenarios, complex integrations, and expert-level features of the PHP Code Intelligence Tool, including Docker runtime container usage for environments without local PHP installation.
+
+## Docker Runtime Container Usage
+
+### Quick Start with Docker Runtime Container
+
+For environments where PHP is not installed locally, use the Docker runtime container:
+
+```bash
+# One-time setup
+make build-runtime
+
+# Run analysis
+docker run --rm -v $(pwd):/workspace php-code-intel:runtime \
+  find-usages "App\\User" --path=src/ --format=json
+
+# Or use the setup script for convenience
+./scripts/runtime-setup.sh
+php-code-intel find-usages "App\\User" --path=src/
+```
+
+### Advanced Docker Runtime Scenarios
+
+#### Batch Processing with Docker
+```bash
+# Process multiple symbols efficiently
+symbols=("App\\Models\\User" "App\\Services\\UserService" "App\\Controllers\\UserController")
+
+for symbol in "${symbols[@]}"; do
+    echo "Analyzing: $symbol"
+    docker run --rm -v $(pwd):/workspace php-code-intel:runtime \
+        find-usages "$symbol" --path=src/ --format=json > "analysis-$(echo $symbol | tr '\\' '-').json"
+done
+```
+
+#### Development vs Production Containers
+```bash
+# Build development container with debugging tools
+make build-runtime-dev
+
+# Use development container for debugging
+docker run --rm -v $(pwd):/workspace php-code-intel:runtime-dev \
+    find-usages "App\\User" --path=src/ --verbose
+
+# Production container for CI/CD
+docker run --rm -v $(pwd):/workspace php-code-intel:runtime \
+    find-usages "App\\User" --path=src/ --format=json --confidence=CERTAIN
+```
+
+#### Memory-Optimized Docker Processing
+```bash
+# For large projects, limit memory and use streaming
+docker run --rm \
+    -v $(pwd):/workspace \
+    --memory=512m \
+    --memory-swap=1g \
+    php-code-intel:runtime \
+    find-usages "LargeClass" --path=src/ --format=json
+```
+
+#### Docker Compose for Team Development
+```yaml
+# docker-compose.override.yml for team development
+services:
+  analysis:
+    extends:
+      file: docker-compose.runtime.yml
+      service: php-code-intel
+    volumes:
+      - .:/workspace
+      - analysis-cache:/tmp/analysis
+    environment:
+      - ANALYSIS_CACHE_DIR=/tmp/analysis
+```
+
+#### Multi-Project Analysis with Docker
+```bash
+#!/bin/bash
+# analyze-multiple-projects.sh
+
+projects=(
+    "/path/to/project1"
+    "/path/to/project2"
+    "/path/to/project3"
+)
+
+# Build runtime container once
+make build-runtime
+
+for project in "${projects[@]}"; do
+    echo "Analyzing $(basename $project)..."
+    
+    docker run --rm \
+        -v "$project:/workspace" \
+        -v "$(pwd)/reports:/reports" \
+        php-code-intel:runtime \
+        find-usages "CommonInterface" --path=src/ --format=json \
+        > "reports/$(basename $project)-analysis.json"
+done
+```
 
 ## Complex Symbol Analysis
 
