@@ -164,10 +164,13 @@ EOF
     private function shouldIncludeFile(string $filePath, array $excludePaths): bool
     {
         $realPath = realpath($filePath);
+        if ($realPath === false) {
+            return false;
+        }
         
         foreach ($excludePaths as $excludePath) {
             $realExcludePath = realpath($excludePath);
-            if ($realExcludePath && str_starts_with($realPath, $realExcludePath)) {
+            if ($realExcludePath !== false && str_starts_with($realPath, $realExcludePath)) {
                 return false;
             }
             

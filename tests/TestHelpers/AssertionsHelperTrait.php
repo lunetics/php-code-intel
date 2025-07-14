@@ -6,6 +6,10 @@ namespace CodeIntel\Tests\TestHelpers;
 
 trait AssertionsHelperTrait
 {
+    /**
+     * @param array<array{file: string, line: int, code: string, confidence: string, type: string, context: array{start: int, end: int, lines: array<string>}}} $usages
+     * @param array<string, mixed> $expected
+     */
     protected function assertUsageFound(array $usages, array $expected): void
     {
         $found = false;
@@ -22,6 +26,10 @@ trait AssertionsHelperTrait
         );
     }
     
+    /**
+     * @param array<array{file: string, line: int, code: string, confidence: string, type: string, context: array{start: int, end: int, lines: array<string>}}} $usages
+     * @param array<string, mixed> $expected
+     */
     protected function assertUsageNotFound(array $usages, array $expected): void
     {
         $found = false;
@@ -38,6 +46,10 @@ trait AssertionsHelperTrait
         );
     }
     
+    /**
+     * @param array{file: string, line: int, code: string, confidence: string, type: string, context: array{start: int, end: int, lines: array<string>}} $usage
+     * @param array<string, mixed> $expected
+     */
     private function usageMatches(array $usage, array $expected): bool
     {
         foreach ($expected as $key => $value) {
@@ -69,6 +81,9 @@ trait AssertionsHelperTrait
         );
     }
     
+    /**
+     * @param array<string> $files
+     */
     protected function createTestIndex(array $files): \CodeIntel\Index\SymbolIndex
     {
         $index = new \CodeIntel\Index\SymbolIndex();

@@ -224,10 +224,13 @@ EOF
     private function shouldIncludeFile(string $filePath, array $excludePaths): bool
     {
         $realPath = realpath($filePath);
+        if ($realPath === false) {
+            return false;
+        }
         
         foreach ($excludePaths as $excludePath) {
             $realExcludePath = realpath($excludePath);
-            if ($realExcludePath && str_starts_with($realPath, $realExcludePath)) {
+            if ($realExcludePath !== false && str_starts_with($realPath, $realExcludePath)) {
                 return false;
             }
         }
@@ -257,7 +260,11 @@ EOF
     {
         switch ($format) {
             case 'json':
-                return json_encode($usages, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+                $json = json_encode($usages, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+                if ($json === false) {
+                    return '[]';
+                }
+                return $json;
                 
             case 'table':
                 return $this->formatAsTable($usages);
