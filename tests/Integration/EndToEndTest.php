@@ -56,7 +56,6 @@ class EndToEndTest extends TestCase
         foreach ($usages as $usage) {
             $this->assertArrayHasKey('context', $usage);
             $this->assertArrayHasKey('lines', $usage['context']);
-            $this->assertIsArray($usage['context']['lines']);
         }
     }
 
@@ -161,7 +160,6 @@ class EndToEndTest extends TestCase
         
         // Verify output structure is suitable for Claude Code
         foreach ($usages as $usage) {
-            $this->assertIsArray($usage);
             $this->assertArrayHasKey('file', $usage);
             $this->assertArrayHasKey('line', $usage);
             $this->assertArrayHasKey('code', $usage);
@@ -175,7 +173,6 @@ class EndToEndTest extends TestCase
             $this->assertIsString($usage['code']);
             $this->assertIsString($usage['confidence']);
             $this->assertIsString($usage['type']);
-            $this->assertIsArray($usage['context']);
             
             // Verify confidence levels are valid
             $this->assertContains($usage['confidence'], ['CERTAIN', 'PROBABLE', 'POSSIBLE', 'DYNAMIC']);
@@ -193,9 +190,9 @@ class EndToEndTest extends TestCase
         
         // Test with malformed symbol names
         $usages = $this->finder->find('');
-        $this->assertEmpty($usages);
+        $this->assertEmpty($usages, 'Should return empty array for empty symbol name');
         
         $usages = $this->finder->find('\\\\\\InvalidName');
-        $this->assertEmpty($usages);
+        $this->assertEmpty($usages, 'Should return empty array for invalid symbol name');
     }
 }

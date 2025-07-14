@@ -5,8 +5,8 @@
 
 parameters:
     # Analysis level (0-9, where 9 is the strictest)
-    # Start with level 6 for gradual adoption, can increase later
-    level: 6
+    # Upgraded to level 7 for stricter type checking
+    level: 7
     
     # Paths to analyze
     paths:
@@ -35,4 +35,5 @@ parameters:
     # Enable stricter analysis
     treatPhpDocTypesAsCertain: false
     
-    # All code now passes PHPStan level 6 analysis without ignores
+    # Ignore errors for specific patterns (if needed)
+    # ignoreErrors: []

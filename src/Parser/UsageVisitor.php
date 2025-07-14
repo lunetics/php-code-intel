@@ -12,22 +12,17 @@ use PhpParser\NodeVisitorAbstract;
  */
 class UsageVisitor extends NodeVisitorAbstract
 {
-    /**
-     * @var array<array{file: string, line: int, code: string, confidence: string, type: string, context: array{start: int, end: int, lines: array<string>}}>
-     */
+    /** @var array<array{file: string, line: int, code: string, confidence: string, type: string, context: array{start: int, end: int, lines: array<string>}}> */
     private array $usages = [];
     private string $currentNamespace = '';
-    /**
-     * @var array<string, string>
-     */
+    /** @var array<string, string> */
     private array $useStatements = [];
     private string $targetSymbol;
     private string $filePath;
-    /**
-     * @var array<string>
-     */
+    /** @var array<string> */
     private array $fileLines;
     private string $normalizedTarget;
+    private ?string $targetClass = null;
     private ?string $targetMethod = null;
 
     public function __construct(string $targetSymbol, string $filePath, ?string $fileContent = null)
@@ -40,7 +35,7 @@ class UsageVisitor extends NodeVisitorAbstract
         
         // Pre-parse class::method if applicable
         if (strpos($targetSymbol, '::') !== false) {
-            [, $this->targetMethod] = explode('::', $targetSymbol, 2);
+            [$this->targetClass, $this->targetMethod] = explode('::', $targetSymbol, 2);
         }
         
         // If file content is provided, use it; otherwise read from file
@@ -51,7 +46,7 @@ class UsageVisitor extends NodeVisitorAbstract
         }
     }
 
-    public function enterNode(Node $node): ?Node
+    public function enterNode(Node $node): ?int
     {
         // Track namespace context
         if ($node instanceof Node\Stmt\Namespace_) {
@@ -70,7 +65,6 @@ class UsageVisitor extends NodeVisitorAbstract
 
         // Find symbol usages
         $this->checkForUsage($node);
-        
         return null;
     }
 
@@ -130,7 +124,9 @@ class UsageVisitor extends NodeVisitorAbstract
                 
                 // Also check if we're looking for a specific class::method and this matches the method part
                 if ($this->targetMethod !== null && $methodName === $this->targetMethod) {
-                    $this->addUsage($line, $code, 'CERTAIN', 'method_call');
+                    // Add usage, but note that we can't be certain about the class without more context
+                    $confidence = $this->targetClass !== null ? 'PROBABLE' : 'CERTAIN';
+                    $this->addUsage($line, $code, $confidence, 'method_call');
                 }
             }
         }
@@ -161,7 +157,7 @@ class UsageVisitor extends NodeVisitorAbstract
     }
 
     /**
-     * @param Node\Name|string|mixed $class
+     * @param Node\Name|Node\Expr|mixed $class
      */
     private function resolveClassName($class): ?string
     {

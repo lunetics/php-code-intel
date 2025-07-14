@@ -13,13 +13,11 @@ use PhpParser\NodeTraverser;
  */
 class SymbolIndex
 {
-    /**
-     * @var array<string, array{classes: array<mixed>, methods: array<mixed>, functions: array<mixed>, constants: array<mixed>}>
-     */
+    /** @var array<string, array<string, array<string>>> */
     private array $symbols = [];
-    /**
-     * @var array<string>
-     */
+    /** @var array<string, string> */
+    private array $fileHashes = [];
+    /** @var array<string> */
     private array $indexedFiles = [];
     
     public function indexFile(string $filePath): void
@@ -28,6 +26,10 @@ class SymbolIndex
             return;
         }
         
+        $hash = md5_file($filePath);
+        if ($hash !== false) {
+            $this->fileHashes[$filePath] = $hash;
+        }
         $this->indexedFiles[] = $filePath;
         
         // Basic indexing - just store that we've processed the file
@@ -40,25 +42,19 @@ class SymbolIndex
         ];
     }
     
-    /**
-     * @return array<string, array{classes: array<mixed>, methods: array<mixed>, functions: array<mixed>, constants: array<mixed>}>
-     */
+    /** @return array<string, array<string, array<string>>> */
     public function getSymbols(): array
     {
         return $this->symbols;
     }
     
-    /**
-     * @return array{classes: array<mixed>, methods: array<mixed>, functions: array<mixed>, constants: array<mixed>}|null
-     */
+    /** @return array<string, array<string>>|null */
     public function findSymbol(string $fullyQualifiedName): ?array
     {
         return $this->symbols[$fullyQualifiedName] ?? null;
     }
     
-    /**
-     * @return array<string>
-     */
+    /** @return array<string> */
     public function getIndexedFiles(): array
     {
         return $this->indexedFiles;
@@ -74,6 +70,37 @@ class SymbolIndex
             $count += count($fileSymbols['constants'] ?? []);
         }
         return $count;
+    }
+    
+    /**
+     * Check if a file has changed since it was last indexed
+     */
+    public function hasFileChanged(string $filePath): bool
+    {
+        if (!file_exists($filePath)) {
+            return true; // File no longer exists, consider it changed
+        }
+        
+        if (!isset($this->fileHashes[$filePath])) {
+            return true; // File not previously indexed
+        }
+        
+        $currentHash = md5_file($filePath);
+        return $currentHash !== false && $currentHash !== $this->fileHashes[$filePath];
+    }
+    
+    /**
+     * Get the stored hash for a file
+     */
+    public function getFileHash(string $filePath): ?string
+    {
+        return $this->fileHashes[$filePath] ?? null;
+    }
+    
+    /** @return array<string, string> */
+    public function getFileHashes(): array
+    {
+        return $this->fileHashes;
     }
     
     public function clear(): void

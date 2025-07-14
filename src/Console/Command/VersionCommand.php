@@ -68,7 +68,11 @@ class VersionCommand extends Command
         }
         
         try {
-            $lock = json_decode(file_get_contents($lockFile), true, 512, JSON_THROW_ON_ERROR);
+            $content = file_get_contents($lockFile);
+            if ($content === false) {
+                return 'Unknown';
+            }
+            $lock = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
             
             foreach ($lock['packages'] ?? [] as $pkg) {
                 if ($pkg['name'] === $package) {
