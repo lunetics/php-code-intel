@@ -17,7 +17,6 @@ class ErrorCategoryTest extends TestCase
     {
         foreach (ErrorCategory::cases() as $category) {
             $description = $category->getDescription();
-            $this->assertIsString($description);
             $this->assertNotEmpty($description);
             // Most descriptions contain 'error', but some may contain related terms
             $hasErrorTerm = str_contains(strtolower($description), 'error') || 

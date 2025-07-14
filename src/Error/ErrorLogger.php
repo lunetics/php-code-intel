@@ -209,7 +209,11 @@ class ErrorLogger
             return;
         }
 
-        $io->section(sprintf('Error Summary (%d total)', $summary['total']));
+        $total = $summary['total'];
+        if (!is_int($total)) {
+            $total = 0;
+        }
+        $io->section(sprintf('Error Summary (%d total)', $total));
 
         // Display by category
         if (!empty($summary['byCategory']) && is_array($summary['byCategory'])) {

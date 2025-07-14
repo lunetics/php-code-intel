@@ -170,12 +170,15 @@ class ErrorLoggerTest extends TestCase
         $summary = $this->logger->getErrorSummary();
 
         $this->assertEquals(4, $summary['total']);
+        $this->assertIsArray($summary['byCategory']);
         $this->assertEquals(3, $summary['byCategory']['syntax']);
         $this->assertEquals(1, $summary['byCategory']['io']);
+        $this->assertIsArray($summary['bySeverity']);
         $this->assertEquals(3, $summary['bySeverity']['warning']);
         $this->assertEquals(1, $summary['bySeverity']['error']);
         
         // Check critical files (files with 3+ errors)
+        $this->assertIsArray($summary['criticalFiles']);
         $this->assertArrayHasKey('/test/1.php', $summary['criticalFiles']);
         $this->assertEquals(3, $summary['criticalFiles']['/test/1.php']);
     }

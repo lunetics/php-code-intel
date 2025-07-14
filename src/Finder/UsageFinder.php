@@ -93,9 +93,9 @@ class UsageFinder
             
         } catch (Error $e) {
             // Log parsing error with context
-            $lineNumber = $e->getStartLine() ?? null;
+            $lineNumber = $e->getStartLine();
             $codeSnippet = null;
-            if (is_string($code)) {
+            if (isset($code) && is_string($code)) {
                 $codeSnippet = $this->getCodeSnippet($code, $lineNumber);
             }
             $this->errorLogger->logParseError($filePath, $e, $codeSnippet);
