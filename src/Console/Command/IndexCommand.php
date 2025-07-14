@@ -61,9 +61,33 @@ EOF
     {
         $io = new SymfonyStyle($input, $output);
         
-        $paths = $input->getArgument('paths');
-        $excludePaths = $input->getOption('exclude') ?? [];
+        // Type-safe extraction of command arguments and options
+        $pathsRaw = $input->getArgument('paths');
+        $excludePathsRaw = $input->getOption('exclude');
         $showStats = $input->getOption('stats');
+        
+        // Validate and cast paths argument to array of strings
+        if (!is_array($pathsRaw)) {
+            $io->error('Invalid paths argument - expected array');
+            return Command::FAILURE;
+        }
+        $paths = $this->validateStringArray($pathsRaw, 'paths');
+        
+        // Validate and cast exclude paths option to array of strings
+        $excludePaths = [];
+        if ($excludePathsRaw !== null) {
+            if (!is_array($excludePathsRaw)) {
+                $io->error('Invalid exclude option - expected array');
+                return Command::FAILURE;
+            }
+            $excludePaths = $this->validateStringArray($excludePathsRaw, 'exclude paths');
+        }
+        
+        // Validate showStats option
+        if ($showStats !== null && !is_bool($showStats)) {
+            $io->error('Invalid stats option - expected boolean');
+            return Command::FAILURE;
+        }
         
         // Add common exclusions
         $excludePaths = array_merge($excludePaths, ['vendor', 'node_modules', '.git']);
@@ -85,6 +109,12 @@ EOF
             $errors = [];
             
             foreach ($paths as $path) {
+                // Type guard: ensure path is a string
+                if (!is_string($path)) {
+                    $io->warning('Invalid path type - skipping non-string path');
+                    continue;
+                }
+                
                 if (!file_exists($path)) {
                     $io->warning("Path does not exist: $path");
                     continue;
@@ -149,6 +179,11 @@ EOF
         );
         
         foreach ($iterator as $file) {
+            // Type guard: ensure we have a proper SplFileInfo object
+            if (!$file instanceof \SplFileInfo) {
+                continue;
+            }
+            
             if ($file->isFile() && 
                 $file->getExtension() === 'php' && 
                 $this->shouldIncludeFile($file->getPathname(), $excludePaths)
@@ -207,5 +242,30 @@ EOF
         // Memory usage
         $memoryUsage = memory_get_peak_usage(true) / 1024 / 1024;
         $io->text(sprintf('Peak memory usage: %.2f MB', $memoryUsage));
+    }
+    
+    /**
+     * Validates that all elements in an array are strings
+     * 
+     * @param array<mixed> $array
+     * @return array<string>
+     * @throws \InvalidArgumentException
+     */
+    private function validateStringArray(array $array, string $context): array
+    {
+        $result = [];
+        foreach ($array as $key => $value) {
+            if (!is_string($value)) {
+                throw new \InvalidArgumentException(
+                    sprintf('Invalid %s at index %s - expected string, got %s', 
+                        $context, 
+                        $key, 
+                        get_debug_type($value)
+                    )
+                );
+            }
+            $result[] = $value;
+        }
+        return $result;
     }
 }

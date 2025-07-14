@@ -28,8 +28,8 @@ class VersionCommand extends Command
             ['PHP Version' => PHP_VERSION],
             ['PHP Parser' => $this->getComposerPackageVersion('nikic/php-parser')],
             ['Symfony Console' => $this->getComposerPackageVersion('symfony/console')],
-            ['Memory Limit' => ini_get('memory_limit')],
-            ['Max Execution Time' => ini_get('max_execution_time') . 's']
+            ['Memory Limit' => ini_get('memory_limit') ?: 'Unknown'],
+            ['Max Execution Time' => (ini_get('max_execution_time') ?: '0') . 's']
         );
         
         $io->section('Capabilities');
@@ -74,15 +74,34 @@ class VersionCommand extends Command
             }
             $lock = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
             
-            foreach ($lock['packages'] ?? [] as $pkg) {
-                if ($pkg['name'] === $package) {
-                    return $pkg['version'] ?? 'Unknown';
+            // Type validation: ensure we have an array with expected structure
+            if (!is_array($lock)) {
+                return 'Unknown';
+            }
+            
+            // Search in main packages
+            if (isset($lock['packages']) && is_array($lock['packages'])) {
+                foreach ($lock['packages'] as $pkg) {
+                    if (is_array($pkg) && 
+                        isset($pkg['name']) && 
+                        $pkg['name'] === $package && 
+                        isset($pkg['version']) && 
+                        is_string($pkg['version'])) {
+                        return $pkg['version'];
+                    }
                 }
             }
             
-            foreach ($lock['packages-dev'] ?? [] as $pkg) {
-                if ($pkg['name'] === $package) {
-                    return $pkg['version'] ?? 'Unknown';
+            // Search in dev packages
+            if (isset($lock['packages-dev']) && is_array($lock['packages-dev'])) {
+                foreach ($lock['packages-dev'] as $pkg) {
+                    if (is_array($pkg) && 
+                        isset($pkg['name']) && 
+                        $pkg['name'] === $package && 
+                        isset($pkg['version']) && 
+                        is_string($pkg['version'])) {
+                        return $pkg['version'];
+                    }
                 }
             }
         } catch (\Exception) {
@@ -103,17 +122,17 @@ class VersionCommand extends Command
             ['Zend Engine' => zend_version()],
             ['Extensions' => $this->getRelevantExtensions()],
             ['Include Path' => get_include_path()],
-            ['Working Directory' => getcwd()],
+            ['Working Directory' => getcwd() ?: 'Unknown'],
             ['Peak Memory Usage' => $this->formatBytes(memory_get_peak_usage(true))]
         );
         
         $io->section('PHP Configuration');
         $phpConfig = [
             'error_reporting' => $this->getErrorReportingLevel(),
-            'display_errors' => ini_get('display_errors') ? 'On' : 'Off',
-            'log_errors' => ini_get('log_errors') ? 'On' : 'Off',
-            'short_open_tag' => ini_get('short_open_tag') ? 'On' : 'Off',
-            'opcache.enable' => extension_loaded('opcache') && ini_get('opcache.enable') ? 'On' : 'Off'
+            'display_errors' => (ini_get('display_errors') !== false && ini_get('display_errors') !== '' && ini_get('display_errors') !== '0') ? 'On' : 'Off',
+            'log_errors' => (ini_get('log_errors') !== false && ini_get('log_errors') !== '' && ini_get('log_errors') !== '0') ? 'On' : 'Off',
+            'short_open_tag' => (ini_get('short_open_tag') !== false && ini_get('short_open_tag') !== '' && ini_get('short_open_tag') !== '0') ? 'On' : 'Off',
+            'opcache.enable' => extension_loaded('opcache') && (ini_get('opcache.enable') !== false && ini_get('opcache.enable') !== '' && ini_get('opcache.enable') !== '0') ? 'On' : 'Off'
         ];
         
         foreach ($phpConfig as $key => $value) {
