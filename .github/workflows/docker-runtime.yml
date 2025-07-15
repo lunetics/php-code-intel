@@ -1,0 +1,129 @@
+name: Docker Runtime Container
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'Dockerfile.runtime'
+      - 'Dockerfile.runtime.dev'
+      - 'docker-compose.runtime.yml'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'src/**'
+      - 'bin/**'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'Dockerfile.runtime'
+      - 'Dockerfile.runtime.dev'
+      - 'docker-compose.runtime.yml'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'src/**'
+      - 'bin/**'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        variant: [runtime, runtime-dev]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Build runtime container
+        run: |
+          if [ "${{ matrix.variant }}" = "runtime" ]; then
+            docker build -f Dockerfile.runtime -t php-code-intel:runtime .
+          else
+            docker build -f Dockerfile.runtime.dev -t php-code-intel:runtime-dev .
+          fi
+      
+      - name: Test container - Version check
+        run: |
+          if [ "${{ matrix.variant }}" = "runtime" ]; then
+            docker run --rm php-code-intel:runtime --version
+          else
+            docker run --rm php-code-intel:runtime-dev --version
+          fi
+      
+      - name: Test container - Health check
+        run: |
+          if [ "${{ matrix.variant }}" = "runtime" ]; then
+            docker run --rm php-code-intel:runtime --version | grep -q "PHP Code Intelligence Tool"
+          else
+            docker run --rm php-code-intel:runtime-dev --version | grep -q "PHP Code Intelligence Tool"
+          fi
+      
+      - name: Test container - Symbol analysis
+        run: |
+          if [ "${{ matrix.variant }}" = "runtime" ]; then
+            docker run --rm -v ${{ github.workspace }}:/workspace php-code-intel:runtime \
+              find-usages "TestFixtures\\BasicSymbols\\SimpleClass" --path=/workspace/tests/fixtures/BasicSymbols/ --format=json
+          else
+            docker run --rm -v ${{ github.workspace }}:/workspace php-code-intel:runtime-dev \
+              find-usages "TestFixtures\\BasicSymbols\\SimpleClass" --path=/workspace/tests/fixtures/BasicSymbols/ --format=json
+          fi
+      
+      - name: Test container - Indexing
+        run: |
+          if [ "${{ matrix.variant }}" = "runtime" ]; then
+            docker run --rm -v ${{ github.workspace }}:/workspace php-code-intel:runtime \
+              index /workspace/tests/fixtures/BasicSymbols/
+          else
+            docker run --rm -v ${{ github.workspace }}:/workspace php-code-intel:runtime-dev \
+              index /workspace/tests/fixtures/BasicSymbols/
+          fi
+      
+      - name: Test Docker Compose
+        if: matrix.variant == 'runtime'
+        run: |
+          docker-compose -f docker-compose.runtime.yml build php-code-intel
+          docker-compose -f docker-compose.runtime.yml run --rm php-code-intel \
+            find-usages "TestFixtures\\BasicSymbols\\SimpleClass" --path=/workspace/tests/fixtures/BasicSymbols/ --format=json
+      
+      - name: Test Docker Compose Dev
+        if: matrix.variant == 'runtime-dev'
+        run: |
+          docker-compose -f docker-compose.runtime.yml build php-code-intel-dev
+          docker-compose -f docker-compose.runtime.yml run --rm php-code-intel-dev \
+            find-usages "TestFixtures\\BasicSymbols\\SimpleClass" --path=/workspace/tests/fixtures/BasicSymbols/ --format=json
+      
+      - name: Test Make commands
+        run: |
+          if [ "${{ matrix.variant }}" = "runtime" ]; then
+            make test-runtime
+          else
+            make build-runtime-dev
+          fi
+      
+      - name: Check container size
+        run: |
+          if [ "${{ matrix.variant }}" = "runtime" ]; then
+            docker images php-code-intel:runtime
+          else
+            docker images php-code-intel:runtime-dev
+          fi
+      
+      - name: Save container image
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: |
+          if [ "${{ matrix.variant }}" = "runtime" ]; then
+            docker save php-code-intel:runtime | gzip > php-code-intel-runtime.tar.gz
+          else
+            docker save php-code-intel:runtime-dev | gzip > php-code-intel-runtime-dev.tar.gz
+          fi
+      
+      - name: Upload container artifact
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: actions/upload-artifact@v3
+        with:
+          name: php-code-intel-${{ matrix.variant }}
+          path: php-code-intel-${{ matrix.variant }}.tar.gz
+          retention-days: 7

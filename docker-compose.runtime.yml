@@ -1,0 +1,26 @@
+services:
+  php-code-intel:
+    build:
+      context: .
+      dockerfile: Dockerfile.runtime
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    environment:
+      - PHP_MEMORY_LIMIT=512M
+    profiles:
+      - tools
+
+  # Development version with dev dependencies
+  php-code-intel-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.runtime.dev
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    environment:
+      - PHP_MEMORY_LIMIT=512M
+      - XDEBUG_MODE=debug
+    profiles:
+      - dev

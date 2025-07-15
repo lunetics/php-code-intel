@@ -1,0 +1,44 @@
+FROM php:8.4-cli-alpine
+
+# Install system dependencies
+RUN apk add --no-cache \
+    git \
+    unzip \
+    libzip-dev \
+    && docker-php-ext-install zip \
+    && rm -rf /var/cache/apk/*
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Create app directory
+WORKDIR /app
+
+# Copy composer files first for better caching
+COPY composer.json composer.lock ./
+
+# Install dependencies (cached layer)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
+# Copy source code
+COPY . .
+
+# Run post-install scripts if needed
+RUN composer run-script --no-dev post-install-cmd || true
+
+# Set optimal PHP configuration
+RUN echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/memory.ini \
+    && echo "opcache.enable_cli = 1" > /usr/local/etc/php/conf.d/opcache.ini
+
+# Make executable
+RUN chmod +x bin/php-code-intel
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD php /app/bin/php-code-intel --version || exit 1
+
+# Create workspace
+WORKDIR /workspace
+
+# Set entrypoint
+ENTRYPOINT ["php", "/app/bin/php-code-intel"]
